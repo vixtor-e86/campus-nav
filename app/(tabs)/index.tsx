@@ -1,98 +1,162 @@
-import { Image } from 'expo-image';
-import { Platform, StyleSheet } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { StyleSheet, View, Text, TouchableOpacity, Dimensions, ActivityIndicator, Alert, ScrollView, TextInput } from 'react-native';
+import MapView, { Marker, Polyline, Polygon, PROVIDER_GOOGLE } from 'react-native-maps';
+import * as Location from 'expo-location';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+import { StatusBar } from 'expo-status-bar';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { supabase } from '@/lib/supabase';
 
-import { HelloWave } from '@/components/hello-wave';
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Link } from 'expo-router';
+const CATEGORIES = ['All', 'Faculty', 'Lecture Theatre', 'Auditorium', 'Administrative', 'Gate'];
 
-export default function HomeScreen() {
+export default function CampusNav() {
+  const [location, setLocation] = useState<Location.LocationObject | null>(null);
+  const [pois, setPois] = useState<any[]>([]);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('All');
+  const [selectedDestination, setSelectedDestination] = useState<any | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [isMapExpanded, setIsMapExpanded] = useState(false);
+
+  useEffect(() => {
+    fetchLocations();
+    setupLocation();
+  }, []);
+
+  const fetchLocations = async () => {
+    const { data, error } = await supabase.from('locations').select('*');
+    if (error) {
+      console.error('Error fetching locations:', error);
+      Alert.alert('Database Error', 'Could not load campus data.');
+    } else {
+      setPois(data);
+    }
+  };
+
+  const setupLocation = async () => {
+    let { status } = await Location.requestForegroundPermissionsAsync();
+    if (status !== 'granted') {
+      setLoading(false);
+      return;
+    }
+    try {
+      let current = await Location.getCurrentPositionAsync({});
+      setLocation(current);
+    } catch (e) {} finally {
+      setLoading(false);
+    }
+    Location.watchPositionAsync({ accuracy: Location.Accuracy.High, distanceInterval: 10 }, (loc) => setLocation(loc));
+  };
+
+  const filteredPois = useMemo(() => {
+    return pois.filter(p => {
+      const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase());
+      const matchesCategory = activeCategory === 'All' || p.category === activeCategory;
+      return matchesSearch && matchesCategory;
+    });
+  }, [searchQuery, activeCategory, pois]);
+
+  if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#007AFF" /><Text>Syncing Campus Data...</Text></View>;
+
   return (
-    <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
-      headerImage={
-        <Image
-          source={require('@/assets/images/partial-react-logo.png')}
-          style={styles.reactLogo}
-        />
-      }>
-      <ThemedView style={styles.titleContainer}>
-        <ThemedText type="title">Welcome!</ThemedText>
-        <HelloWave />
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 1: Try it</ThemedText>
-        <ThemedText>
-          Edit <ThemedText type="defaultSemiBold">app/(tabs)/index.tsx</ThemedText> to see changes.
-          Press{' '}
-          <ThemedText type="defaultSemiBold">
-            {Platform.select({
-              ios: 'cmd + d',
-              android: 'cmd + m',
-              web: 'F12',
-            })}
-          </ThemedText>{' '}
-          to open developer tools.
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <Link href="/modal">
-          <Link.Trigger>
-            <ThemedText type="subtitle">Step 2: Explore</ThemedText>
-          </Link.Trigger>
-          <Link.Preview />
-          <Link.Menu>
-            <Link.MenuAction title="Action" icon="cube" onPress={() => alert('Action pressed')} />
-            <Link.MenuAction
-              title="Share"
-              icon="square.and.arrow.up"
-              onPress={() => alert('Share pressed')}
-            />
-            <Link.Menu title="More" icon="ellipsis">
-              <Link.MenuAction
-                title="Delete"
-                icon="trash"
-                destructive
-                onPress={() => alert('Delete pressed')}
+    <SafeAreaView style={styles.safeContainer} edges={['top']}>
+      <StatusBar style="dark" />
+      <View style={styles.container}>
+        
+        {/* Unified Top Navigation & Search */}
+        {!isMapExpanded && (
+          <View style={styles.header}>
+            <View style={styles.searchBar}>
+              <IconSymbol name="house.fill" size={20} color="#999" />
+              <TextInput 
+                style={styles.searchInput}
+                placeholder="Search FPN Campus..."
+                value={searchQuery}
+                onChangeText={setSearchQuery}
               />
-            </Link.Menu>
-          </Link.Menu>
-        </Link>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catScroll}>
+              {CATEGORIES.map(cat => (
+                <TouchableOpacity 
+                  key={cat} 
+                  onPress={() => setActiveCategory(cat)}
+                  style={[styles.catChip, activeCategory === cat && styles.catChipActive]}
+                >
+                  <Text style={[styles.catText, activeCategory === cat && styles.catTextActive]}>{cat}</Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+        )}
 
-        <ThemedText>
-          {`Tap the Explore tab to learn more about what's included in this starter app.`}
-        </ThemedText>
-      </ThemedView>
-      <ThemedView style={styles.stepContainer}>
-        <ThemedText type="subtitle">Step 3: Get a fresh start</ThemedText>
-        <ThemedText>
-          {`When you're ready, run `}
-          <ThemedText type="defaultSemiBold">npm run reset-project</ThemedText> to get a fresh{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> directory. This will move the current{' '}
-          <ThemedText type="defaultSemiBold">app</ThemedText> to{' '}
-          <ThemedText type="defaultSemiBold">app-example</ThemedText>.
-        </ThemedText>
-      </ThemedView>
-    </ParallaxScrollView>
+        {/* Map UI */}
+        <View style={[styles.mapWrapper, isMapExpanded ? styles.mapExpanded : styles.mapMinimized]}>
+          <MapView
+            key={isMapExpanded ? 'exp' : 'min'}
+            style={styles.map}
+            provider={PROVIDER_GOOGLE}
+            initialRegion={{ latitude: 8.5680, longitude: 7.7175, latitudeDelta: 0.015, longitudeDelta: 0.015 }}
+            showsUserLocation={true}
+          >
+            {filteredPois.map(poi => (
+              <Marker
+                key={poi.id}
+                coordinate={{ latitude: poi.latitude, longitude: poi.longitude }}
+                title={poi.name}
+                pinColor={selectedDestination?.id === poi.id ? '#4CAF50' : '#FF3B30'}
+              />
+            ))}
+            {location && selectedDestination && (
+              <Polyline coordinates={[{ latitude: location.coords.latitude, longitude: location.coords.longitude }, { latitude: selectedDestination.latitude, longitude: selectedDestination.longitude }]} strokeColor="#007AFF" strokeWidth={4} />
+            )}
+          </MapView>
+          <TouchableOpacity style={styles.expandFab} onPress={() => setIsMapExpanded(!isMapExpanded)}>
+            <IconSymbol size={24} name={isMapExpanded ? "chevron.left" : "chevron.right"} color="#FFF" />
+          </TouchableOpacity>
+        </View>
+
+        {/* Dynamic Card List */}
+        {!isMapExpanded && (
+          <ScrollView style={styles.listContainer}>
+            <Text style={styles.resTitle}>{filteredPois.length} Locations Found</Text>
+            {filteredPois.map(poi => (
+              <TouchableOpacity key={poi.id} style={[styles.poiRow, selectedDestination?.id === poi.id && styles.selectedRow]} onPress={() => setSelectedDestination(poi)}>
+                <View style={styles.rowIcon}><IconSymbol name="mappin.circle.fill" size={24} color="#007AFF" /></View>
+                <View>
+                  <Text style={styles.rowName}>{poi.name}</Text>
+                  <Text style={styles.rowCat}>{poi.category}</Text>
+                </View>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        )}
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  titleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  stepContainer: {
-    gap: 8,
-    marginBottom: 8,
-  },
-  reactLogo: {
-    height: 178,
-    width: 290,
-    bottom: 0,
-    left: 0,
-    position: 'absolute',
-  },
+  safeContainer: { flex: 1, backgroundColor: '#FFF' },
+  container: { flex: 1, backgroundColor: '#F8F9FA' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  header: { backgroundColor: '#FFF', paddingBottom: 10, borderBottomWidth: 1, borderBottomColor: '#EEE' },
+  searchBar: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#F0F0F0', margin: 15, paddingHorizontal: 15, borderRadius: 12, height: 45 },
+  searchInput: { flex: 1, marginLeft: 10, fontSize: 16 },
+  catScroll: { paddingHorizontal: 15 },
+  catChip: { paddingHorizontal: 15, paddingVertical: 8, borderRadius: 20, backgroundColor: '#EEE', marginRight: 8 },
+  catChipActive: { backgroundColor: '#007AFF' },
+  catText: { fontSize: 13, color: '#666' },
+  catTextActive: { color: '#FFF', fontWeight: 'bold' },
+  mapWrapper: { overflow: 'hidden' },
+  mapMinimized: { height: 300, margin: 15, borderRadius: 20 },
+  mapExpanded: { flex: 1 },
+  map: { flex: 1 },
+  expandFab: { position: 'absolute', bottom: 15, right: 15, backgroundColor: '#007AFF', width: 44, height: 44, borderRadius: 22, justifyContent: 'center', alignItems: 'center' },
+  listContainer: { flex: 1, padding: 15 },
+  resTitle: { fontSize: 14, fontWeight: 'bold', color: '#999', marginBottom: 10 },
+  poiRow: { flexDirection: 'row', alignItems: 'center', backgroundColor: '#FFF', padding: 15, borderRadius: 12, marginBottom: 8 },
+  selectedRow: { borderColor: '#007AFF', borderWidth: 2 },
+  rowIcon: { marginRight: 15 },
+  rowName: { fontSize: 16, fontWeight: 'bold' },
+  rowCat: { fontSize: 12, color: '#999' }
 });

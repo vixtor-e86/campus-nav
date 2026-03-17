@@ -1,0 +1,118 @@
+import React, { useState, useEffect } from 'react';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Platform, ActivityIndicator, Alert } from 'react-native';
+import { supabase } from '@/lib/supabase';
+import { IconSymbol } from '@/components/ui/icon-symbol';
+
+const CATEGORIES = ['Faculty', 'Lecture Theatre', 'Auditorium', 'Administrative', 'Gate', 'Other'];
+
+export default function AdminDashboard() {
+  const [locations, setLocations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [form, setForm] = useState({ name: '', description: '', latitude: '', longitude: '', category: 'Faculty' });
+
+  useEffect(() => {
+    fetchLocations();
+  }, []);
+
+  const fetchLocations = async () => {
+    setLoading(true);
+    const { data, error } = await supabase.from('locations').select('*').order('created_at', { ascending: false });
+    if (!error) setLocations(data || []);
+    setLoading(false);
+  };
+
+  const handleAdd = async () => {
+    if (!form.name || !form.latitude || !form.longitude) {
+      if (Platform.OS === 'web') alert('Please fill in all required fields');
+      return;
+    }
+    const { error } = await supabase.from('locations').insert([{
+      name: form.name,
+      description: form.description,
+      latitude: parseFloat(form.latitude),
+      longitude: parseFloat(form.longitude),
+      category: form.category
+    }]);
+
+    if (error) alert('Error adding location: ' + error.message);
+    else {
+      setForm({ name: '', description: '', latitude: '', longitude: '', category: 'Faculty' });
+      fetchLocations();
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    const { error } = await supabase.from('locations').delete().eq('id', id);
+    if (error) alert('Error deleting: ' + error.message);
+    else fetchLocations();
+  };
+
+  if (Platform.OS !== 'web' && !__DEV__) {
+    return <View style={styles.centered}><Text>Admin is only available on Web</Text></View>;
+  }
+
+  return (
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+      <Text style={styles.title}>FPN Campus Admin</Text>
+      
+      {/* Add Form */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Add New Location</Text>
+        <TextInput style={styles.input} placeholder="Location Name" value={form.name} onChangeText={(t) => setForm({...form, name: t})} />
+        <View style={styles.row}>
+          <TextInput style={[styles.input, { flex: 1, marginRight: 10 }]} placeholder="Lat (e.g. 8.56)" value={form.latitude} onChangeText={(t) => setForm({...form, latitude: t})} />
+          <TextInput style={[styles.input, { flex: 1 }]} placeholder="Lng (e.g. 7.71)" value={form.longitude} onChangeText={(t) => setForm({...form, longitude: t})} />
+        </View>
+        <View style={styles.catRow}>
+          {CATEGORIES.map(cat => (
+            <TouchableOpacity key={cat} style={[styles.catBtn, form.category === cat && styles.catBtnActive]} onPress={() => setForm({...form, category: cat})}>
+              <Text style={[styles.catBtnText, form.category === cat && styles.catBtnTextActive]}>{cat}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
+        <TouchableOpacity style={styles.addBtn} onPress={handleAdd}>
+          <Text style={styles.addBtnText}>Save Location</Text>
+        </TouchableOpacity>
+      </View>
+
+      {/* List */}
+      <View style={styles.card}>
+        <Text style={styles.cardTitle}>Manage Locations ({locations.length})</Text>
+        {loading ? <ActivityIndicator color="#007AFF" /> : (
+          locations.map(loc => (
+            <View key={loc.id} style={styles.locRow}>
+              <View style={{ flex: 1 }}>
+                <Text style={styles.locName}>{loc.name}</Text>
+                <Text style={styles.locCoords}>{loc.latitude.toFixed(4)}, {loc.longitude.toFixed(4)} • {loc.category}</Text>
+              </View>
+              <TouchableOpacity onPress={() => handleDelete(loc.id)}>
+                <IconSymbol name="house.fill" size={20} color="#FF3B30" />
+              </TouchableOpacity>
+            </View>
+          ))
+        )}
+      </View>
+    </ScrollView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: '#F0F2F5' },
+  content: { padding: 20, maxWidth: 800, alignSelf: 'center', width: '100%' },
+  centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 20, color: '#1C1E21' },
+  card: { backgroundColor: '#FFF', borderRadius: 12, padding: 20, marginBottom: 20, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
+  cardTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#444' },
+  input: { backgroundColor: '#F0F2F5', padding: 12, borderRadius: 8, marginBottom: 10, fontSize: 16 },
+  row: { flexDirection: 'row' },
+  catRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 15 },
+  catBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 15, backgroundColor: '#EEE', marginRight: 8, marginBottom: 8 },
+  catBtnActive: { backgroundColor: '#007AFF' },
+  catBtnText: { fontSize: 12, color: '#666' },
+  catBtnTextActive: { color: '#FFF', fontWeight: 'bold' },
+  addBtn: { backgroundColor: '#4CAF50', padding: 15, borderRadius: 8, alignItems: 'center' },
+  addBtnText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
+  locRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#EEE' },
+  locName: { fontSize: 16, fontWeight: 'bold', color: '#333' },
+  locCoords: { fontSize: 12, color: '#999', marginTop: 2 },
+});
