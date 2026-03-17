@@ -58,7 +58,16 @@ export default function AdminDashboard() {
       {/* Add Form */}
       <View style={styles.card}>
         <Text style={styles.cardTitle}>Add New Location</Text>
-        <TextInput style={styles.input} placeholder="Location Name" value={form.name} onChangeText={(t) => setForm({...form, name: t})} />
+        
+        <View style={styles.tipBox}>
+          <IconSymbol name="house.fill" size={16} color="#007AFF" />
+          <Text style={styles.tipText}>
+            <Text style={{ fontWeight: 'bold' }}>Tip: How to get coordinates?</Text>{"\n"}
+            Open Google Maps, right-click on your campus location, and the first numbers you see (e.g., 8.56, 7.71) are the Latitude and Longitude. Click them to copy!
+          </Text>
+        </View>
+
+        <TextInput style={styles.input} placeholder="Location Name (e.g. ETF Hall)" value={form.name} onChangeText={(t) => setForm({...form, name: t})} />
         <View style={styles.row}>
           <TextInput style={[styles.input, { flex: 1, marginRight: 10 }]} placeholder="Lat (e.g. 8.56)" value={form.latitude} onChangeText={(t) => setForm({...form, latitude: t})} />
           <TextInput style={[styles.input, { flex: 1 }]} placeholder="Lng (e.g. 7.71)" value={form.longitude} onChangeText={(t) => setForm({...form, longitude: t})} />
@@ -103,6 +112,8 @@ const styles = StyleSheet.create({
   title: { fontSize: 28, fontWeight: 'bold', marginBottom: 20, color: '#1C1E21' },
   card: { backgroundColor: '#FFF', borderRadius: 12, padding: 20, marginBottom: 20, shadowColor: '#000', shadowOpacity: 0.1, shadowRadius: 10, elevation: 5 },
   cardTitle: { fontSize: 18, fontWeight: 'bold', marginBottom: 15, color: '#444' },
+  tipBox: { backgroundColor: '#E1F5FE', padding: 15, borderRadius: 10, marginBottom: 20, flexDirection: 'row', alignItems: 'flex-start', borderLeftWidth: 4, borderLeftColor: '#007AFF' },
+  tipText: { flex: 1, marginLeft: 10, fontSize: 13, color: '#01579B', lineHeight: 18 },
   input: { backgroundColor: '#F0F2F5', padding: 12, borderRadius: 8, marginBottom: 10, fontSize: 16 },
   row: { flexDirection: 'row' },
   catRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 15 },
