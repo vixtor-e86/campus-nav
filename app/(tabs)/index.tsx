@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { StyleSheet, View, Text, TouchableOpacity, Dimensions, ActivityIndicator, Alert, ScrollView, TextInput } from 'react-native';
-import MapView, { Marker, Polyline, Polygon, PROVIDER_GOOGLE } from 'react-native-maps';
+import CampusMap from '@/components/CampusMap';
 import * as Location from 'expo-location';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 import { StatusBar } from 'expo-status-bar';
@@ -91,25 +91,13 @@ export default function CampusNav() {
 
         {/* Map UI */}
         <View style={[styles.mapWrapper, isMapExpanded ? styles.mapExpanded : styles.mapMinimized]}>
-          <MapView
-            key={isMapExpanded ? 'exp' : 'min'}
-            style={styles.map}
-            provider={PROVIDER_GOOGLE}
-            initialRegion={{ latitude: 8.5680, longitude: 7.7175, latitudeDelta: 0.015, longitudeDelta: 0.015 }}
-            showsUserLocation={true}
-          >
-            {filteredPois.map(poi => (
-              <Marker
-                key={poi.id}
-                coordinate={{ latitude: poi.latitude, longitude: poi.longitude }}
-                title={poi.name}
-                pinColor={selectedDestination?.id === poi.id ? '#4CAF50' : '#FF3B30'}
-              />
-            ))}
-            {location && selectedDestination && (
-              <Polyline coordinates={[{ latitude: location.coords.latitude, longitude: location.coords.longitude }, { latitude: selectedDestination.latitude, longitude: selectedDestination.longitude }]} strokeColor="#007AFF" strokeWidth={4} />
-            )}
-          </MapView>
+          <CampusMap
+            isMapExpanded={isMapExpanded}
+            mapStyle={styles.map}
+            filteredPois={filteredPois}
+            selectedDestination={selectedDestination}
+            location={location}
+          />
           <TouchableOpacity style={styles.expandFab} onPress={() => setIsMapExpanded(!isMapExpanded)}>
             <IconSymbol size={24} name={isMapExpanded ? "chevron.left" : "chevron.right"} color="#FFF" />
           </TouchableOpacity>
