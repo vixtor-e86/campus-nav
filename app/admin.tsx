@@ -1,11 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Platform, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Platform, ActivityIndicator, Alert, useWindowDimensions } from 'react-native';
 import { supabase } from '@/lib/supabase';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
 const CATEGORIES = ['Faculty', 'Lecture Theatre', 'Auditorium', 'Administrative', 'Gate', 'Other'];
 
 export default function AdminDashboard() {
+  const { width } = useWindowDimensions();
+  const isMobile = width < 600;
+
   const [locations, setLocations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ name: '', description: '', latitude: '', longitude: '', category: 'Faculty' });
@@ -47,10 +50,6 @@ export default function AdminDashboard() {
     else fetchLocations();
   };
 
-  if (Platform.OS !== 'web' && !__DEV__) {
-    return <View style={styles.centered}><Text>Admin is only available on Web</Text></View>;
-  }
-
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>FPN Campus Admin</Text>
@@ -68,8 +67,8 @@ export default function AdminDashboard() {
         </View>
 
         <TextInput style={styles.input} placeholder="Location Name (e.g. ETF Hall)" value={form.name} onChangeText={(t) => setForm({...form, name: t})} />
-        <View style={styles.row}>
-          <TextInput style={[styles.input, { flex: 1, marginRight: 10 }]} placeholder="Lat (e.g. 8.56)" value={form.latitude} onChangeText={(t) => setForm({...form, latitude: t})} />
+        <View style={isMobile ? styles.col : styles.row}>
+          <TextInput style={[styles.input, { flex: 1, marginRight: isMobile ? 0 : 10 }]} placeholder="Lat (e.g. 8.56)" value={form.latitude} onChangeText={(t) => setForm({...form, latitude: t})} />
           <TextInput style={[styles.input, { flex: 1 }]} placeholder="Lng (e.g. 7.71)" value={form.longitude} onChangeText={(t) => setForm({...form, longitude: t})} />
         </View>
         <View style={styles.catRow}>
@@ -116,6 +115,7 @@ const styles = StyleSheet.create({
   tipText: { flex: 1, marginLeft: 10, fontSize: 13, color: '#01579B', lineHeight: 18 },
   input: { backgroundColor: '#F0F2F5', padding: 12, borderRadius: 8, marginBottom: 10, fontSize: 16 },
   row: { flexDirection: 'row' },
+  col: { flexDirection: 'column' },
   catRow: { flexDirection: 'row', flexWrap: 'wrap', marginBottom: 15 },
   catBtn: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 15, backgroundColor: '#EEE', marginRight: 8, marginBottom: 8 },
   catBtnActive: { backgroundColor: '#007AFF' },

@@ -17,6 +17,8 @@ export default function CampusNav() {
   const [selectedDestination, setSelectedDestination] = useState<any | null>(null);
   const [loading, setLoading] = useState(true);
   const [isMapExpanded, setIsMapExpanded] = useState(false);
+  const [mapType, setMapType] = useState('standard');
+  const [travelMode, setTravelMode] = useState('WALKING');
 
   useEffect(() => {
     fetchLocations();
@@ -75,6 +77,11 @@ export default function CampusNav() {
                 value={searchQuery}
                 onChangeText={setSearchQuery}
               />
+              {searchQuery.length > 0 && (
+                <TouchableOpacity onPress={() => setSearchQuery('')}>
+                  <IconSymbol name="trash.fill" size={20} color="#999" />
+                </TouchableOpacity>
+              )}
             </View>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.catScroll}>
               {CATEGORIES.map(cat => (
@@ -90,6 +97,33 @@ export default function CampusNav() {
           </View>
         )}
 
+        {/* Map Controls */}
+        <View style={styles.controlsRow}>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.modesList}>
+            {[
+              { id: 'WALKING', label: 'Walk', icon: 'paperplane.fill' },
+              { id: 'DRIVING', label: 'Car', icon: 'house.fill' },
+              { id: 'BICYCLING', label: 'Bike', icon: 'paperplane.fill' },
+            ].map(mode => (
+              <TouchableOpacity 
+                key={mode.id} 
+                style={[styles.modeBtn, travelMode === mode.id && styles.modeBtnActive]}
+                onPress={() => setTravelMode(mode.id)}
+              >
+                <Text style={[styles.modeText, travelMode === mode.id && styles.modeTextActive]}>{mode.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+          
+          <TouchableOpacity 
+            style={[styles.satBtn, mapType === 'satellite' && styles.satBtnActive]}
+            onPress={() => setMapType(mapType === 'standard' ? 'satellite' : 'standard')}
+          >
+            <IconSymbol name="map.fill" size={18} color={mapType === 'satellite' ? '#FFF' : '#007AFF'} />
+            <Text style={[styles.satText, mapType === 'satellite' && styles.satTextActive]}>Sat</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Map UI */}
         <View style={[styles.mapWrapper, isMapExpanded ? styles.mapExpanded : styles.mapMinimized]}>
           <CampusMap
@@ -98,6 +132,8 @@ export default function CampusNav() {
             filteredPois={filteredPois}
             selectedDestination={selectedDestination}
             location={location}
+            mapType={mapType}
+            travelMode={travelMode}
           />
           <TouchableOpacity style={styles.expandFab} onPress={() => setIsMapExpanded(!isMapExpanded)}>
             <IconSymbol size={24} name={isMapExpanded ? "chevron.left" : "chevron.right"} color="#FFF" />
@@ -147,5 +183,38 @@ const styles = StyleSheet.create({
   selectedRow: { borderColor: '#007AFF', borderWidth: 2 },
   rowIcon: { marginRight: 15 },
   rowName: { fontSize: 16, fontWeight: 'bold' },
-  rowCat: { fontSize: 12, color: '#999' }
+  rowCat: { fontSize: 12, color: '#999' },
+  controlsRow: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: '#FFF', 
+    paddingVertical: 10, 
+    paddingHorizontal: 15, 
+    borderBottomWidth: 1, 
+    borderBottomColor: '#EEE' 
+  },
+  modesList: { paddingRight: 10 },
+  modeBtn: { 
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 8, 
+    backgroundColor: '#F0F0F0', 
+    marginRight: 8,
+    flexDirection: 'row',
+    alignItems: 'center'
+  },
+  modeBtnActive: { backgroundColor: '#007AFF' },
+  modeText: { fontSize: 12, color: '#666' },
+  modeTextActive: { color: '#FFF', fontWeight: 'bold' },
+  satBtn: { 
+    flexDirection: 'row', 
+    alignItems: 'center', 
+    backgroundColor: '#F0F0F0', 
+    paddingHorizontal: 12, 
+    paddingVertical: 6, 
+    borderRadius: 8 
+  },
+  satBtnActive: { backgroundColor: '#007AFF' },
+  satText: { fontSize: 12, color: '#007AFF', marginLeft: 5, fontWeight: 'bold' },
+  satTextActive: { color: '#FFF' }
 });
