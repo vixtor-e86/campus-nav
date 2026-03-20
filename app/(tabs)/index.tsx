@@ -28,8 +28,9 @@ export default function CampusNav() {
     if (error) {
       console.error('Error fetching locations:', error);
       Alert.alert('Database Error', 'Could not load campus data.');
+      setPois([]); // Ensure it is an empty array
     } else {
-      setPois(data);
+      setPois(data || []);
     }
   };
 

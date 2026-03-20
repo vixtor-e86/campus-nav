@@ -13,6 +13,11 @@
     },
     "android": {
       "package": "com.vixto.campusnav",
+      "config": {
+        "googleMaps": {
+          "apiKey": "AIzaSyDt8_j3sbvDX-IZsFlhgdiNnIizj1YUaEg"
+        }
+      },
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
