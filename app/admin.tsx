@@ -95,7 +95,7 @@ export default function AdminDashboard() {
                 <Text style={styles.locCoords}>{loc.latitude.toFixed(4)}, {loc.longitude.toFixed(4)} • {loc.category}</Text>
               </View>
               <TouchableOpacity onPress={() => handleDelete(loc.id)}>
-                <IconSymbol name="house.fill" size={20} color="#FF3B30" />
+                <IconSymbol name="trash.fill" size={20} color="#FF3B30" />
               </TouchableOpacity>
             </View>
           ))

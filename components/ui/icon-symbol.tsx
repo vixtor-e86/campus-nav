@@ -21,6 +21,7 @@ const MAPPING = {
   'chevron.left': 'chevron-left',
   'map.fill': 'map',
   'mappin.circle.fill': 'location-on',
+  'trash.fill': 'delete',
   'arrow.up.left.and.arrow.down.right': 'fullscreen',
   'arrow.down.right.and.arrow.up.left': 'fullscreen-exit',
 } as IconMapping;
