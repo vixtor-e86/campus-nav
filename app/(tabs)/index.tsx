@@ -134,6 +134,8 @@ export default function CampusNav() {
             location={location}
             mapType={mapType}
             travelMode={travelMode}
+            searchQuery={searchQuery}
+            activeCategory={activeCategory}
           />
           <TouchableOpacity style={styles.expandFab} onPress={() => setIsMapExpanded(!isMapExpanded)}>
             <IconSymbol size={24} name={isMapExpanded ? "chevron.left" : "chevron.right"} color="#FFF" />

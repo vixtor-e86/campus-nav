@@ -12,7 +12,9 @@ export default function CampusMap({
   selectedDestination, 
   location,
   mapType = 'standard',
-  travelMode = 'WALKING'
+  travelMode = 'WALKING',
+  searchQuery = '',
+  activeCategory = 'All'
 }: any) {
   const origin = location ? {
     latitude: location.coords.latitude,
@@ -24,6 +26,9 @@ export default function CampusMap({
     longitude: selectedDestination.longitude
   } : null;
 
+  // We only show markers if a location is selected OR if the user is actively searching/filtering
+  const isSearchActive = searchQuery.length > 0 || activeCategory !== 'All';
+
   return (
     <MapView
       key={isMapExpanded ? 'exp' : 'min'}
@@ -33,14 +38,24 @@ export default function CampusMap({
       initialRegion={{ latitude: 8.5680, longitude: 7.7175, latitudeDelta: 0.015, longitudeDelta: 0.015 }}
       showsUserLocation={true}
     >
-      {filteredPois.map((poi: any) => (
-        <Marker
-          key={poi.id}
-          coordinate={{ latitude: poi.latitude, longitude: poi.longitude }}
-          title={poi.name}
-          pinColor={selectedDestination?.id === poi.id ? '#4CAF50' : '#FF3B30'}
-        />
-      ))}
+      {filteredPois.map((poi: any) => {
+        const isSelected = selectedDestination?.id === poi.id;
+        
+        // Skip rendering this marker if it's not selected AND the user isn't searching
+        if (!isSelected && !isSearchActive) return null;
+
+        return (
+          <Marker
+            key={poi.id}
+            coordinate={{ latitude: poi.latitude, longitude: poi.longitude }}
+            title={poi.name}
+            // If selected, show Green. Otherwise, show a subtle gray.
+            pinColor={isSelected ? '#4CAF50' : '#A0A0A0'}
+            // Make unselected markers slightly transparent so they don't clutter
+            opacity={isSelected ? 1 : 0.6}
+          />
+        );
+      })}
 
       {origin && destination && (
         <MapViewDirections
