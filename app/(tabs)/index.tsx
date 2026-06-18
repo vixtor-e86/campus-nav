@@ -7,7 +7,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { supabase } from '@/lib/supabase';
 
-const CATEGORIES = ['All', 'Faculty', 'Lecture Theatre', 'Auditorium', 'Administrative', 'Gate'];
+const CATEGORIES = ['All', 'Faculty', 'Lecture Theatre', 'Auditorium', 'Administrative', 'Gate', 'Hostel', 'ICT', 'School Clinic', 'Mosque', 'Church', 'Other'];
 
 export default function CampusNav() {
   const [location, setLocation] = useState<Location.LocationObject | null>(null);

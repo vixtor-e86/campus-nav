@@ -3,7 +3,7 @@ import { View, Text, TextInput, TouchableOpacity, ScrollView, StyleSheet, Platfo
 import { supabase } from '@/lib/supabase';
 import { IconSymbol } from '@/components/ui/icon-symbol';
 
-const CATEGORIES = ['Faculty', 'Lecture Theatre', 'Auditorium', 'Administrative', 'Gate', 'Other'];
+const CATEGORIES = ['Faculty', 'Lecture Theatre', 'Auditorium', 'Administrative', 'Gate', 'Hostel', 'ICT', 'School Clinic', 'Mosque', 'Church', 'Other'];
 
 export default function AdminDashboard() {
   const { width } = useWindowDimensions();
