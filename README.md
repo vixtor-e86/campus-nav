@@ -1,5 +1,6 @@
 # 🎓 FPN Campus Navigation & Admin System
 
+
 Welcome! This project is a dual-purpose application designed to help students navigate the **Federal Polytechnic Nasarawa (FPN)** campus and provide administrators with a way to manage campus locations easily.
 
 ---
