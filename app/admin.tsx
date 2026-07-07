@@ -7,7 +7,8 @@ const CATEGORIES = ['Faculty', 'Lecture Theatre', 'Auditorium', 'Administrative'
 
 export default function AdminDashboard() {
   const { width } = useWindowDimensions();
-  const isMobile = width < 600;
+  const [hasMounted, setHasMounted] = useState(false);
+  const isMobile = hasMounted && width < 600;
 
   const [locations, setLocations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -15,6 +16,7 @@ export default function AdminDashboard() {
   const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
+    setHasMounted(true);
     fetchLocations();
   }, []);
 
