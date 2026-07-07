@@ -12,6 +12,7 @@ export default function AdminDashboard() {
   const [locations, setLocations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [form, setForm] = useState({ name: '', description: '', latitude: '', longitude: '', category: 'Faculty' });
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     fetchLocations();
@@ -24,23 +25,37 @@ export default function AdminDashboard() {
     setLoading(false);
   };
 
-  const handleAdd = async () => {
+  const handleSave = async () => {
     if (!form.name || !form.latitude || !form.longitude) {
       if (Platform.OS === 'web') alert('Please fill in all required fields');
       return;
     }
-    const { error } = await supabase.from('locations').insert([{
+
+    const payload = {
       name: form.name,
       description: form.description,
       latitude: parseFloat(form.latitude),
       longitude: parseFloat(form.longitude),
       category: form.category
-    }]);
+    };
 
-    if (error) alert('Error adding location: ' + error.message);
-    else {
-      setForm({ name: '', description: '', latitude: '', longitude: '', category: 'Faculty' });
-      fetchLocations();
+    if (editingId) {
+      const { error } = await supabase.from('locations').update(payload).eq('id', editingId);
+      if (error) {
+        alert('Error updating location: ' + error.message);
+      } else {
+        setForm({ name: '', description: '', latitude: '', longitude: '', category: 'Faculty' });
+        setEditingId(null);
+        fetchLocations();
+      }
+    } else {
+      const { error } = await supabase.from('locations').insert([payload]);
+      if (error) {
+        alert('Error adding location: ' + error.message);
+      } else {
+        setForm({ name: '', description: '', latitude: '', longitude: '', category: 'Faculty' });
+        fetchLocations();
+      }
     }
   };
 
@@ -50,13 +65,29 @@ export default function AdminDashboard() {
     else fetchLocations();
   };
 
+  const startEdit = (loc: any) => {
+    setEditingId(loc.id);
+    setForm({
+      name: loc.name,
+      description: loc.description || '',
+      latitude: loc.latitude.toString(),
+      longitude: loc.longitude.toString(),
+      category: loc.category
+    });
+  };
+
+  const cancelEdit = () => {
+    setEditingId(null);
+    setForm({ name: '', description: '', latitude: '', longitude: '', category: 'Faculty' });
+  };
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>FPN Campus Admin</Text>
       
       {/* Add Form */}
       <View style={styles.card}>
-        <Text style={styles.cardTitle}>Add New Location</Text>
+        <Text style={styles.cardTitle}>{editingId ? 'Edit Location' : 'Add New Location'}</Text>
         
         <View style={styles.tipBox}>
           <IconSymbol name="house.fill" size={16} color="#007AFF" />
@@ -78,9 +109,16 @@ export default function AdminDashboard() {
             </TouchableOpacity>
           ))}
         </View>
-        <TouchableOpacity style={styles.addBtn} onPress={handleAdd}>
-          <Text style={styles.addBtnText}>Save Location</Text>
-        </TouchableOpacity>
+        <View style={editingId ? styles.row : null}>
+          <TouchableOpacity style={[styles.addBtn, { flex: 1 }]} onPress={handleSave}>
+            <Text style={styles.addBtnText}>{editingId ? 'Update Location' : 'Save Location'}</Text>
+          </TouchableOpacity>
+          {editingId && (
+            <TouchableOpacity style={[styles.cancelBtn, { marginLeft: 10 }]} onPress={cancelEdit}>
+              <Text style={styles.cancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* List */}
@@ -93,9 +131,14 @@ export default function AdminDashboard() {
                 <Text style={styles.locName}>{loc.name}</Text>
                 <Text style={styles.locCoords}>{loc.latitude.toFixed(4)}, {loc.longitude.toFixed(4)} • {loc.category}</Text>
               </View>
-              <TouchableOpacity onPress={() => handleDelete(loc.id)}>
-                <IconSymbol name="trash.fill" size={20} color="#FF3B30" />
-              </TouchableOpacity>
+              <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+                <TouchableOpacity onPress={() => startEdit(loc)} style={{ marginRight: 15 }}>
+                  <IconSymbol name="pencil.circle.fill" size={20} color="#007AFF" />
+                </TouchableOpacity>
+                <TouchableOpacity onPress={() => handleDelete(loc.id)}>
+                  <IconSymbol name="trash.fill" size={20} color="#FF3B30" />
+                </TouchableOpacity>
+              </View>
             </View>
           ))
         )}
@@ -123,6 +166,8 @@ const styles = StyleSheet.create({
   catBtnTextActive: { color: '#FFF', fontWeight: 'bold' },
   addBtn: { backgroundColor: '#4CAF50', padding: 15, borderRadius: 8, alignItems: 'center' },
   addBtnText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
+  cancelBtn: { backgroundColor: '#FF3B30', padding: 15, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  cancelBtnText: { color: '#FFF', fontWeight: 'bold', fontSize: 16 },
   locRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 12, borderBottomWidth: 1, borderBottomColor: '#EEE' },
   locName: { fontSize: 16, fontWeight: 'bold', color: '#333' },
   locCoords: { fontSize: 12, color: '#999', marginTop: 2 },

@@ -29,6 +29,14 @@ export default function CampusMap({
   // We only show markers if a location is selected OR if the user is actively searching/filtering
   const isSearchActive = searchQuery.length > 0 || activeCategory !== 'All';
 
+  const hidePoiLabelsStyle = [
+    {
+      featureType: 'poi',
+      elementType: 'labels',
+      stylers: [{ visibility: 'off' }],
+    },
+  ];
+
   return (
     <MapView
       key={isMapExpanded ? 'exp' : 'min'}
@@ -37,6 +45,7 @@ export default function CampusMap({
       mapType={mapType}
       initialRegion={{ latitude: 8.5680, longitude: 7.7175, latitudeDelta: 0.015, longitudeDelta: 0.015 }}
       showsUserLocation={true}
+      customMapStyle={hidePoiLabelsStyle}
     >
       {filteredPois.map((poi: any) => {
         const isSelected = selectedDestination?.id === poi.id;

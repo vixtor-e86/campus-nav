@@ -24,6 +24,7 @@ const MAPPING = {
   'trash.fill': 'delete',
   'arrow.up.left.and.arrow.down.right': 'fullscreen',
   'arrow.down.right.and.arrow.up.left': 'fullscreen-exit',
+  'pencil.circle.fill': 'edit',
 } as IconMapping;
 
 /**
