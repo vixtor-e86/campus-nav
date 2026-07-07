@@ -83,6 +83,14 @@ export default function AdminDashboard() {
     setForm({ name: '', description: '', latitude: '', longitude: '', category: 'Faculty' });
   };
 
+  if (!hasMounted) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#007AFF" />
+      </View>
+    );
+  }
+
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <Text style={styles.title}>FPN Campus Admin</Text>

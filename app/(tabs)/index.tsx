@@ -19,8 +19,10 @@ export default function CampusNav() {
   const [isMapExpanded, setIsMapExpanded] = useState(false);
   const [mapType, setMapType] = useState('standard');
   const [travelMode, setTravelMode] = useState('WALKING');
+  const [hasMounted, setHasMounted] = useState(false);
 
   useEffect(() => {
+    setHasMounted(true);
     fetchLocations();
     setupLocation();
   }, []);
@@ -59,7 +61,14 @@ export default function CampusNav() {
     });
   }, [searchQuery, activeCategory, pois]);
 
-  if (loading) return <View style={styles.centered}><ActivityIndicator size="large" color="#007AFF" /><Text>Syncing Campus Data...</Text></View>;
+  if (!hasMounted || loading) {
+    return (
+      <View style={styles.centered}>
+        <ActivityIndicator size="large" color="#007AFF" />
+        <Text>Syncing Campus Data...</Text>
+      </View>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeContainer} edges={['top']}>
