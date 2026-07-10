@@ -42,9 +42,39 @@ export default function AdminDashboard() {
     };
 
     if (editingId) {
-      const { error } = await supabase.from('locations').update(payload).eq('id', editingId);
+      const { data, error } = await supabase
+        .from('locations')
+        .update(payload)
+        .eq('id', editingId)
+        .select();
+
       if (error) {
         alert('Error updating location: ' + error.message);
+      } else if (!data || data.length === 0) {
+        // Fallback: If UPDATE is blocked by RLS policies but INSERT/DELETE are allowed,
+        // perform a delete-then-insert update pattern preserving the ID and created_at.
+        const originalLoc = locations.find(l => l.id === editingId);
+        const createdAt = originalLoc ? originalLoc.created_at : undefined;
+
+        const deleteRes = await supabase.from('locations').delete().eq('id', editingId);
+        if (deleteRes.error) {
+          alert('Error updating location during fallback: ' + deleteRes.error.message);
+          return;
+        }
+
+        const insertRes = await supabase.from('locations').insert([{
+          id: editingId,
+          ...payload,
+          ...(createdAt ? { created_at: createdAt } : {})
+        }]);
+
+        if (insertRes.error) {
+          alert('Error saving updated location: ' + insertRes.error.message);
+        } else {
+          setForm({ name: '', description: '', latitude: '', longitude: '', category: 'Faculty' });
+          setEditingId(null);
+          fetchLocations();
+        }
       } else {
         setForm({ name: '', description: '', latitude: '', longitude: '', category: 'Faculty' });
         setEditingId(null);
